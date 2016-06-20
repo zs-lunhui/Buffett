@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Buffett.iml" filepath="$PROJECT_DIR$/Buffett.iml" />
+      <module fileurl="file://$PROJECT_DIR$/buffett/buffett.iml" filepath="$PROJECT_DIR$/buffett/buffett.iml" />
+    </modules>
+  </component>
+</project>
