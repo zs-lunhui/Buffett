@@ -14,6 +14,7 @@ import android.widget.ListView;
 
 import com.buffett.pulltorefresh.core.PullToRefreshView;
 import com.buffett.pulltorefresh.R;
+import com.buffett.pulltorefresh.core.RefreshView;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +31,7 @@ public class ListViewFragment extends BaseRefreshFragment {
     ListView mListView;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_list_view, container, false);
 
         mListView = (ListView) rootView.findViewById(R.id.list_view);
@@ -50,8 +51,21 @@ public class ListViewFragment extends BaseRefreshFragment {
                 }, REFRESH_DELAY);
             }
         });
+        MyRefreshView refreshView = new MyRefreshView(getActivity());
+        refreshView.setRefreshView(new RefreshView() {
+            View view = inflater.inflate(R.layout.header_layout,null);
+            @Override
+            public View getView() {
+                return view;
+            }
 
-        mPullToRefreshView.setRefreshView(new MyRefreshView(getActivity()));
+            @Override
+            public void onPercent(float percent) {
+                view.setScaleY((float) Math.min(1, 0.5 + percent * 0.5));
+                view.setScaleX((float) Math.min(1, 0.5 + percent * 0.5));
+            }
+        });
+        mPullToRefreshView.setRefreshView(refreshView);
 
         mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
 

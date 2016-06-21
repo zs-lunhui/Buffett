@@ -2,6 +2,7 @@ package com.buffett.pulltorefresh.core;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.drawable.Animatable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.view.MotionEventCompat;
@@ -21,7 +22,7 @@ import android.widget.FrameLayout;
 import com.buffett.pulltorefresh.R;
 import com.buffett.pulltorefresh.util.Utils;
 
-public class PullToRefreshView extends ViewGroup {
+public class PullToRefreshView extends ViewGroup implements Animatable {
 
     private int drag_max_distance = 120; //阻力最大距离
     public void setDrag_max_distance(int drag_max_distance) {
@@ -215,7 +216,6 @@ public class PullToRefreshView extends ViewGroup {
                         (tensionSlingshotPercent / 4), 2)) * 2f;
                 float extraMove = (slingshotDist) * tensionPercent / 2;
                 int targetY = (int) ((slingshotDist * boundedDragPercent) + extraMove);
-
                 refreshView.onPercent(mCurrentDragPercent);
                 setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
                 break;
@@ -273,12 +273,14 @@ public class PullToRefreshView extends ViewGroup {
         refreshContainer.clearAnimation();
         refreshContainer.startAnimation(mAnimateToCorrectPosition);
         if (mRefreshing) {
+            start();
             if (mNotify) {
                 if (mListener != null) {
                     mListener.onRefresh();
                 }
             }
         } else {
+            stop();
             animateOffsetToStartPosition();
         }
         mCurrentOffsetTop = mTarget.getTop();
@@ -348,6 +350,7 @@ public class PullToRefreshView extends ViewGroup {
 
         @Override
         public void onAnimationEnd(Animation animation) {
+            stop();
             mCurrentOffsetTop = mTarget.getTop();
         }
     };
@@ -371,7 +374,6 @@ public class PullToRefreshView extends ViewGroup {
 
     private void setTargetOffsetTop(int offset, boolean requiresUpdate) {
         mTarget.offsetTopAndBottom(offset);
-        refreshContainer.offsetTopAndBottom(offset);
         mCurrentOffsetTop = mTarget.getTop();
         if (requiresUpdate && Build.VERSION.SDK_INT < 11) {
             invalidate();
@@ -413,6 +415,21 @@ public class PullToRefreshView extends ViewGroup {
 
     public void setOnRefreshListener(OnRefreshListener listener) {
         mListener = listener;
+    }
+
+    @Override
+    public void start() {
+
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public boolean isRunning() {
+        return false;
     }
 
     public interface OnRefreshListener {

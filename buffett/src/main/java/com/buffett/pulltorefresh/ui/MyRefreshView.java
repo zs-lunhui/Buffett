@@ -13,6 +13,12 @@ import com.buffett.pulltorefresh.core.RefreshView;
  * Created by wscn20151202 on 16/6/21.
  */
 public class MyRefreshView extends RelativeLayout implements RefreshView{
+    private RefreshView refreshView;
+
+    public void setRefreshView(RefreshView refreshView) {
+        this.refreshView = refreshView;
+    }
+
     public MyRefreshView(Context context) {
         this(context,null);
     }
@@ -23,18 +29,22 @@ public class MyRefreshView extends RelativeLayout implements RefreshView{
 
     public MyRefreshView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        inflate(context,R.layout.header_layout,this);
+        inflate(context,R.layout.headerview,this);
     }
 
     @Override
     public View getView() {
-        return this;
+        return null == refreshView?this:refreshView.getView();
     }
 
     @Override
     public void onPercent(float percent) {
-        getView().setScaleY((float) Math.min(1,0.5+percent*0.5));
-        getView().setScaleX((float) Math.min(1,0.5+percent*0.5));
+        if (null == refreshView) {
+            getView().setScaleY((float) Math.min(1, 0.5 + percent * 0.5));
+            getView().setScaleX((float) Math.min(1, 0.5 + percent * 0.5));
+        } else{
+            refreshView.onPercent(percent);
+        }
         Log.d("onPercentChange",percent+"");
     }
 
