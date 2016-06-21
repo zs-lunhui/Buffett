@@ -17,9 +17,9 @@ import com.buffett.pulltorefresh.R;
  */
 public class CommonRefreshView extends LinearLayout{
 
-    private View convertView;
-    private TextView tv_header;
-    private ImageView img_header;
+    public View convertView;
+    public TextView tv_header;
+    public ImageView img_header;
 
     public CommonRefreshView(Context context) {
         super(context);
@@ -48,8 +48,6 @@ public class CommonRefreshView extends LinearLayout{
             Log.d("setPercent",Math.min(1,0.5+percent*0.5)+"--------"+percent);
 
         }
-
-
     }
 
 

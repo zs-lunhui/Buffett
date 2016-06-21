@@ -4,5 +4,6 @@
         <attr name="type" format="enum">
             <enum name="sun" value="0" />
         </attr>
+        <attr name="headerview" format="reference"/>
     </declare-styleable>
 </resources>

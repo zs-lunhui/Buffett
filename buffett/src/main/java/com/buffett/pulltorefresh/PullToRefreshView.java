@@ -2,13 +2,13 @@ package com.buffett.pulltorefresh;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.view.Gravity;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -22,7 +22,6 @@ import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.buffett.pulltorefresh.refresh_view.BaseRefreshView;
 import com.buffett.pulltorefresh.refresh_view.CommonRefreshView;
@@ -33,18 +32,34 @@ import java.security.InvalidParameterException;
 
 public class PullToRefreshView extends ViewGroup {
 
-    private static final int DRAG_MAX_DISTANCE = 120;
-    private static final float DRAG_RATE = .5f;
-    private static final float DECELERATE_INTERPOLATION_FACTOR = 2f;
+    private int drag_max_distance = 120; //阻力最大距离
+    public void setDrag_max_distance(int drag_max_distance) {
+        this.drag_max_distance = drag_max_distance;
+    }
+
+    private float drag_rate = .5f; //阻率
+    public void setDrag_rate(float drag_rate) {
+        this.drag_rate = drag_rate;
+    }
+
+    private float decelerate_interpolation_factor = 2f;//减速差值因子
+    public void setDecelerate_interpolation_factor(float decelerate_interpolation_factor) {
+        this.decelerate_interpolation_factor = decelerate_interpolation_factor;
+    }
 
     public static final int STYLE_SUN = 0;
-    public static final int MAX_OFFSET_ANIMATION_DURATION = 700;
 
-    private static final int INVALID_POINTER = -1;
+    public int max_offset_animation_duration = 700; //最大偏移动画持续时间
+    public void setMax_offset_animation_duration(int max_offset_animation_duration) {
+        this.max_offset_animation_duration = max_offset_animation_duration;
+    }
 
+    private static final int INVALID_POINTER = -1;//无效的点
+
+    private Context mContext;
     private View mTarget;
     private ImageView mRefreshView;
-    private CommonRefreshView headerView;
+    public CommonRefreshView headerView;
     private Interpolator mDecelerateInterpolator;
     private int mTouchSlop;
     private int mTotalDragDistance;
@@ -64,35 +79,37 @@ public class PullToRefreshView extends ViewGroup {
     private int mTargetPaddingBottom;
     private int mTargetPaddingRight;
     private int mTargetPaddingLeft;
+    private int type;
+    private int headerViewId;
+
 
     public PullToRefreshView(Context context) {
-        this(context, null);
+        super(context);
+        mContext = context;
+
     }
 
     public PullToRefreshView(Context context, AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RefreshView);
-        final int type = a.getInteger(R.styleable.RefreshView_type, STYLE_SUN);
-        a.recycle();
+        type = a.getInteger(R.styleable.RefreshView_type, STYLE_SUN);
 
-        mDecelerateInterpolator = new DecelerateInterpolator(DECELERATE_INTERPOLATION_FACTOR);
-        mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        mTotalDragDistance = Utils.convertDpToPixel(context, DRAG_MAX_DISTANCE);
-        mRefreshView = new ImageView(context);
+        headerViewId = a.getResourceId(R.styleable.RefreshView_headerview,R.layout.header_layout);
+        Log.d("headerViewId",headerViewId+"");
+        a.recycle();
+        mContext = context;
+        headerView = (CommonRefreshView) LayoutInflater.from(context).inflate(headerViewId,null);
+        mDecelerateInterpolator = new DecelerateInterpolator(decelerate_interpolation_factor);
+        mTouchSlop = ViewConfiguration.get(mContext).getScaledTouchSlop();
+        mTotalDragDistance = Utils.convertDpToPixel(mContext, drag_max_distance);
+        mRefreshView = new ImageView(mContext);
         setRefreshStyle(type);
-        TextView tv = new TextView(context);
-        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT);
-        tv.setLayoutParams(params);
-        tv.setTextSize(40);
-        tv.setText("FUCK");
-        tv.setTextColor(Color.RED);
-        tv.setGravity(Gravity.CENTER);
-//        headerView = LayoutInflater.from(context).inflate(R.layout.header_layout,null);
-        headerView = new CommonRefreshView(context);
+        if (null==headerView) {
+            headerView = new CommonRefreshView(mContext);
+        }
         headerView.setHeaderStr("FUCK");
         headerView.setHeaderImg(R.drawable.buildings);
-//        addView(tv);
-        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,120);
+        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,drag_max_distance);
         headerView.setLayoutParams(params1);
         addView(headerView);
 //        addView(mRefreshView);
@@ -100,6 +117,7 @@ public class PullToRefreshView extends ViewGroup {
         setWillNotDraw(false);
         ViewCompat.setChildrenDrawingOrderEnabled(this, true);
     }
+
 
     public void setRefreshStyle(int type) {
         setRefreshing(false);
@@ -221,7 +239,7 @@ public class PullToRefreshView extends ViewGroup {
 
                 final float y = MotionEventCompat.getY(ev, pointerIndex);
                 final float yDiff = y - mInitialMotionY;
-                final float scrollTop = yDiff * DRAG_RATE;
+                final float scrollTop = yDiff * drag_rate;
                 mCurrentDragPercent = scrollTop / mTotalDragDistance;
                 if (mCurrentDragPercent < 0) {
                     return false;
@@ -255,7 +273,7 @@ public class PullToRefreshView extends ViewGroup {
                 }
                 final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
                 final float y = MotionEventCompat.getY(ev, pointerIndex);
-                final float overScrollTop = (y - mInitialMotionY) * DRAG_RATE;
+                final float overScrollTop = (y - mInitialMotionY) * drag_rate;
                 mIsBeingDragged = false;
                 if (overScrollTop > mTotalDragDistance) {
                     setRefreshing(true, true);
@@ -275,7 +293,7 @@ public class PullToRefreshView extends ViewGroup {
     private void animateOffsetToStartPosition() {
         mFrom = mCurrentOffsetTop;
         mFromDragPercent = mCurrentDragPercent;
-        long animationDuration = Math.abs((long) (MAX_OFFSET_ANIMATION_DURATION * mFromDragPercent));
+        long animationDuration = Math.abs((long) (max_offset_animation_duration * mFromDragPercent));
 
         mAnimateToStartPosition.reset();
         mAnimateToStartPosition.setDuration(animationDuration);
@@ -292,7 +310,7 @@ public class PullToRefreshView extends ViewGroup {
         mFromDragPercent = mCurrentDragPercent;
 
         mAnimateToCorrectPosition.reset();
-        mAnimateToCorrectPosition.setDuration(MAX_OFFSET_ANIMATION_DURATION);
+        mAnimateToCorrectPosition.setDuration(max_offset_animation_duration);
         mAnimateToCorrectPosition.setInterpolator(mDecelerateInterpolator);
         mRefreshView.clearAnimation();
         mRefreshView.startAnimation(mAnimateToCorrectPosition);
@@ -505,6 +523,7 @@ public class PullToRefreshView extends ViewGroup {
         view.clearAnimation( );
 
     }
+
 
 }
 
