@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.drawable.Animatable;
 
-import com.buffett.pulltorefresh.PullToRefreshView;
+import com.buffett.pulltorefresh.core.PullToRefreshView;
 
 
 /**

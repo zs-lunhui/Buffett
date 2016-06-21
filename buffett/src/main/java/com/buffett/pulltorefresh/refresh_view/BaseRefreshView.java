@@ -7,7 +7,7 @@ import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
-import com.buffett.pulltorefresh.PullToRefreshView;
+import com.buffett.pulltorefresh.core.PullToRefreshView;
 
 
 public abstract class BaseRefreshView extends Drawable implements Drawable.Callback, Animatable {

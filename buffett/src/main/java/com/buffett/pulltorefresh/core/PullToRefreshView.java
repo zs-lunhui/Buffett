@@ -1,4 +1,4 @@
-package com.buffett.pulltorefresh;
+package com.buffett.pulltorefresh.core;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -7,28 +7,19 @@ import android.support.annotation.NonNull;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 
-import com.buffett.pulltorefresh.refresh_view.BaseRefreshView;
-import com.buffett.pulltorefresh.refresh_view.CommonRefreshView;
-import com.buffett.pulltorefresh.refresh_view.SunRefreshView;
+import com.buffett.pulltorefresh.R;
 import com.buffett.pulltorefresh.util.Utils;
-
-import java.security.InvalidParameterException;
 
 public class PullToRefreshView extends ViewGroup {
 
@@ -58,12 +49,9 @@ public class PullToRefreshView extends ViewGroup {
 
     private Context mContext;
     private View mTarget;
-    private ImageView mRefreshView;
-    public CommonRefreshView headerView;
     private Interpolator mDecelerateInterpolator;
     private int mTouchSlop;
     private int mTotalDragDistance;
-    private BaseRefreshView mBaseRefreshView;
     private float mCurrentDragPercent;
     private int mCurrentOffsetTop;
     private boolean mRefreshing;
@@ -79,9 +67,9 @@ public class PullToRefreshView extends ViewGroup {
     private int mTargetPaddingBottom;
     private int mTargetPaddingRight;
     private int mTargetPaddingLeft;
-    private int type;
-    private int headerViewId;
 
+    private FrameLayout refreshContainer;
+    private RefreshView refreshView;
 
     public PullToRefreshView(Context context) {
         super(context);
@@ -92,51 +80,26 @@ public class PullToRefreshView extends ViewGroup {
     public PullToRefreshView(Context context, AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RefreshView);
-        type = a.getInteger(R.styleable.RefreshView_type, STYLE_SUN);
-
-        headerViewId = a.getResourceId(R.styleable.RefreshView_headerview,R.layout.header_layout);
-        Log.d("headerViewId",headerViewId+"");
         a.recycle();
         mContext = context;
-        headerView = (CommonRefreshView) LayoutInflater.from(context).inflate(headerViewId,null);
+        refreshContainer = new FrameLayout(context);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,drag_max_distance);
+        refreshContainer.setLayoutParams(params);
+
         mDecelerateInterpolator = new DecelerateInterpolator(decelerate_interpolation_factor);
         mTouchSlop = ViewConfiguration.get(mContext).getScaledTouchSlop();
         mTotalDragDistance = Utils.convertDpToPixel(mContext, drag_max_distance);
-        mRefreshView = new ImageView(mContext);
-        setRefreshStyle(type);
-        if (null==headerView) {
-            headerView = new CommonRefreshView(mContext);
-        }
-        headerView.setHeaderStr("FUCK");
-        headerView.setHeaderImg(R.drawable.buildings);
-        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,drag_max_distance);
-        headerView.setLayoutParams(params1);
-        addView(headerView);
-//        addView(mRefreshView);
-
+        addView(refreshContainer);
         setWillNotDraw(false);
         ViewCompat.setChildrenDrawingOrderEnabled(this, true);
     }
 
-
-    public void setRefreshStyle(int type) {
-        setRefreshing(false);
-        switch (type) {
-            case STYLE_SUN:
-                mBaseRefreshView = new SunRefreshView(getContext(), this);
-                break;
-            default:
-                throw new InvalidParameterException("Type does not exist");
+    public void setRefreshView(RefreshView refreshView) {
+        this.refreshView = refreshView;
+        if(this!=null){
+            refreshContainer.removeAllViews();
+            refreshContainer.addView(this.refreshView.getView());
         }
-        mRefreshView.setImageDrawable(mBaseRefreshView);
-    }
-
-    /**
-     * This method sets padding for the refresh (progress) view.
-     */
-    public void setRefreshViewPadding(int left, int top, int right, int bottom) {
-        mRefreshView.setPadding(left, top, right, bottom);
-        headerView.setPadding(left, top, right, bottom);
     }
 
     public int getTotalDragDistance() {
@@ -154,8 +117,7 @@ public class PullToRefreshView extends ViewGroup {
         widthMeasureSpec = MeasureSpec.makeMeasureSpec(getMeasuredWidth() - getPaddingRight() - getPaddingLeft(), MeasureSpec.EXACTLY);
         heightMeasureSpec = MeasureSpec.makeMeasureSpec(getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY);
         mTarget.measure(widthMeasureSpec, heightMeasureSpec);
-        mRefreshView.measure(widthMeasureSpec, heightMeasureSpec);
-        headerView.measure(widthMeasureSpec, heightMeasureSpec);
+        refreshContainer.measure(widthMeasureSpec, heightMeasureSpec);
     }
 
     private void ensureTarget() {
@@ -164,7 +126,7 @@ public class PullToRefreshView extends ViewGroup {
         if (getChildCount() > 0) {
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
-                if (child != mRefreshView) {
+                if (child != refreshContainer) {
                     mTarget = child;
                     mTargetPaddingBottom = mTarget.getPaddingBottom();
                     mTargetPaddingLeft = mTarget.getPaddingLeft();
@@ -254,8 +216,7 @@ public class PullToRefreshView extends ViewGroup {
                 float extraMove = (slingshotDist) * tensionPercent / 2;
                 int targetY = (int) ((slingshotDist * boundedDragPercent) + extraMove);
 
-                mBaseRefreshView.setPercent(mCurrentDragPercent, true);
-                headerView.setPercent(mCurrentDragPercent);
+                refreshView.onPercent(mCurrentDragPercent);
                 setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
                 break;
             }
@@ -277,7 +238,6 @@ public class PullToRefreshView extends ViewGroup {
                 mIsBeingDragged = false;
                 if (overScrollTop > mTotalDragDistance) {
                     setRefreshing(true, true);
-                    startFlick(headerView);
                 } else {
                     mRefreshing = false;
                     animateOffsetToStartPosition();
@@ -299,10 +259,8 @@ public class PullToRefreshView extends ViewGroup {
         mAnimateToStartPosition.setDuration(animationDuration);
         mAnimateToStartPosition.setInterpolator(mDecelerateInterpolator);
         mAnimateToStartPosition.setAnimationListener(mToStartListener);
-        mRefreshView.clearAnimation();
-        mRefreshView.startAnimation(mAnimateToStartPosition);
-        headerView.clearAnimation();
-        headerView.startAnimation(mAnimateToStartPosition);
+        refreshContainer.clearAnimation();
+        refreshContainer.startAnimation(mAnimateToStartPosition);
     }
 
     private void animateOffsetToCorrectPosition() {
@@ -312,20 +270,15 @@ public class PullToRefreshView extends ViewGroup {
         mAnimateToCorrectPosition.reset();
         mAnimateToCorrectPosition.setDuration(max_offset_animation_duration);
         mAnimateToCorrectPosition.setInterpolator(mDecelerateInterpolator);
-        mRefreshView.clearAnimation();
-        mRefreshView.startAnimation(mAnimateToCorrectPosition);
-        headerView.clearAnimation();
-        headerView.startAnimation(mAnimateToCorrectPosition);
-
+        refreshContainer.clearAnimation();
+        refreshContainer.startAnimation(mAnimateToCorrectPosition);
         if (mRefreshing) {
-            mBaseRefreshView.start();
             if (mNotify) {
                 if (mListener != null) {
                     mListener.onRefresh();
                 }
             }
         } else {
-            mBaseRefreshView.stop();
             animateOffsetToStartPosition();
         }
         mCurrentOffsetTop = mTarget.getTop();
@@ -346,13 +299,8 @@ public class PullToRefreshView extends ViewGroup {
             int endTarget = mTotalDragDistance;
             targetTop = (mFrom + (int) ((endTarget - mFrom) * interpolatedTime));
             int offset = targetTop - mTarget.getTop();
-
             mCurrentDragPercent = mFromDragPercent - (mFromDragPercent - 1.0f) * interpolatedTime;
-            mBaseRefreshView.setPercent(mCurrentDragPercent, false);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                headerView.setScaleY((float) Math.min(1,0.5+mCurrentDragPercent*0.5));
-                headerView.setScaleX((float) Math.min(1,0.5+mCurrentDragPercent*0.5));
-            }
+            refreshView.onPercent(mCurrentDragPercent);
             setTargetOffsetTop(offset, false /* requires update */);
         }
     };
@@ -363,8 +311,7 @@ public class PullToRefreshView extends ViewGroup {
         int offset = targetTop - mTarget.getTop();
 
         mCurrentDragPercent = targetPercent;
-        mBaseRefreshView.setPercent(mCurrentDragPercent, true);
-        headerView.setPercent(mCurrentDragPercent);
+        refreshView.onPercent(mCurrentDragPercent);
         mTarget.setPadding(mTargetPaddingLeft, mTargetPaddingTop, mTargetPaddingRight, mTargetPaddingBottom + targetTop);
         setTargetOffsetTop(offset, false);
 
@@ -382,7 +329,7 @@ public class PullToRefreshView extends ViewGroup {
             ensureTarget();
             mRefreshing = refreshing;
             if (mRefreshing) {
-                mBaseRefreshView.setPercent(1f, true);
+                refreshView.onPercent(1);
                 animateOffsetToCorrectPosition();
             } else {
                 animateOffsetToStartPosition();
@@ -401,7 +348,6 @@ public class PullToRefreshView extends ViewGroup {
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            mBaseRefreshView.stop();
             mCurrentOffsetTop = mTarget.getTop();
         }
     };
@@ -425,7 +371,7 @@ public class PullToRefreshView extends ViewGroup {
 
     private void setTargetOffsetTop(int offset, boolean requiresUpdate) {
         mTarget.offsetTopAndBottom(offset);
-        mBaseRefreshView.offsetTopAndBottom(offset);
+        refreshContainer.offsetTopAndBottom(offset);
         mCurrentOffsetTop = mTarget.getTop();
         if (requiresUpdate && Build.VERSION.SDK_INT < 11) {
             invalidate();
@@ -462,8 +408,7 @@ public class PullToRefreshView extends ViewGroup {
         int bottom = getPaddingBottom();
 
         mTarget.layout(left, top + mCurrentOffsetTop, left + width - right, top + height - bottom + mCurrentOffsetTop);
-        mRefreshView.layout(left, top, left + width - right, top + height - bottom);
-        headerView.layout(left, top, left + width - right, top + height - bottom);
+        refreshContainer.layout(left, top, left + width - right, top + height - bottom);
     }
 
     public void setOnRefreshListener(OnRefreshListener listener) {
@@ -472,56 +417,6 @@ public class PullToRefreshView extends ViewGroup {
 
     public interface OnRefreshListener {
         void onRefresh();
-    }
-
-    /**
-
-     * 开启View闪烁效果
-
-     *
-
-     * */
-
-    private void startFlick( View view ){
-
-        if( null == view ){
-
-            return;
-
-        }
-
-        Animation alphaAnimation = new AlphaAnimation( 1, 0 );
-
-        alphaAnimation.setDuration( 300 );
-
-        alphaAnimation.setInterpolator( new LinearInterpolator( ) );
-
-        alphaAnimation.setRepeatCount( Animation.INFINITE );
-
-        alphaAnimation.setRepeatMode( Animation.REVERSE );
-
-        view.startAnimation( alphaAnimation );
-
-    }
-
-    /**
-
-     * 取消View闪烁效果
-
-     *
-
-     * */
-
-    private void stopFlick( View view ){
-
-        if( null == view ){
-
-            return;
-
-        }
-
-        view.clearAnimation( );
-
     }
 
 

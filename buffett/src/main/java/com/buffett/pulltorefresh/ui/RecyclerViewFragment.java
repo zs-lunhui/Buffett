@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.buffett.pulltorefresh.PullToRefreshView;
+import com.buffett.pulltorefresh.core.PullToRefreshView;
 import com.buffett.pulltorefresh.R;
 
 import java.util.Map;
@@ -41,7 +41,7 @@ public class RecyclerViewFragment extends BaseRefreshFragment {
                 }, REFRESH_DELAY);
             }
         });
-
+        mPullToRefreshView.setRefreshView(new MyRefreshView(getActivity()));
         return rootView;
     }
 

@@ -12,7 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 
-import com.buffett.pulltorefresh.PullToRefreshView;
+import com.buffett.pulltorefresh.core.PullToRefreshView;
 import com.buffett.pulltorefresh.R;
 
 import java.util.HashMap;
@@ -50,6 +50,8 @@ public class ListViewFragment extends BaseRefreshFragment {
                 }, REFRESH_DELAY);
             }
         });
+
+        mPullToRefreshView.setRefreshView(new MyRefreshView(getActivity()));
 
         mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
 

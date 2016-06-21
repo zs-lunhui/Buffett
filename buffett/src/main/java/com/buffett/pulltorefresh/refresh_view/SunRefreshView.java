@@ -13,7 +13,7 @@ import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.Transformation;
 
-import com.buffett.pulltorefresh.PullToRefreshView;
+import com.buffett.pulltorefresh.core.PullToRefreshView;
 import com.buffett.pulltorefresh.R;
 import com.buffett.pulltorefresh.util.Utils;
 
