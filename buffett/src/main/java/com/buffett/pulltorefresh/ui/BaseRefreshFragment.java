@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class BaseRefreshFragment extends Fragment {
 
-    public static final int REFRESH_DELAY = 200000;
+    public static final int REFRESH_DELAY = 20000;
 
     public static final String KEY_ICON = "icon";
     public static final String KEY_COLOR = "color";
