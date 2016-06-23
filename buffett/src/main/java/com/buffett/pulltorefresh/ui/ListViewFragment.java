@@ -12,8 +12,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 
-import com.buffett.pulltorefresh.core.PullToRefreshView;
 import com.buffett.pulltorefresh.R;
+import com.buffett.pulltorefresh.core.PullToRefreshView;
 import com.buffett.pulltorefresh.core.RefreshView;
 
 import java.util.HashMap;
@@ -61,8 +61,9 @@ public class ListViewFragment extends BaseRefreshFragment {
 
             @Override
             public void onPercent(float percent) {
-                view.setScaleY((float) Math.min(1, 0.5 + percent * 0.5));
-                view.setScaleX((float) Math.min(1, 0.5 + percent * 0.5));
+                view.setScaleY((float) Math.min(1, 0.75 + percent * 0.25));
+                view.setScaleX((float) Math.min(1, 0.75 + percent * 0.25));
+                view.setAlpha((float) Math.min(1, 0.5 + percent * 0.5));
             }
         });
         mPullToRefreshView.setRefreshView(refreshView);

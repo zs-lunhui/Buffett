@@ -2,7 +2,6 @@ package com.buffett.pulltorefresh.ui;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 
@@ -45,7 +44,6 @@ public class MyRefreshView extends RelativeLayout implements RefreshView{
         } else{
             refreshView.onPercent(percent);
         }
-        Log.d("onPercentChange",percent+"");
     }
 
 

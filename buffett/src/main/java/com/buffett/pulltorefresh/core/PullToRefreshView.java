@@ -139,6 +139,40 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
     }
 
     @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (mRefreshing){
+            final int action = MotionEventCompat.getActionMasked(ev);
+            switch (action){
+                case MotionEvent.ACTION_DOWN:
+                    mActivePointerId = MotionEventCompat.getPointerId(ev, 0);
+                    mIsBeingDragged = false;
+                    final float initialMotionY = getMotionEventY(ev, mActivePointerId);
+                    if (initialMotionY == -1) {
+                        return false;
+                    }
+                    mInitialMotionY = initialMotionY;
+                    break;
+                case MotionEvent.ACTION_MOVE: {
+                    final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
+                    final float y = MotionEventCompat.getY(ev, pointerIndex);
+                    final float yDiff = y - mInitialMotionY;
+                    final float scrollTop = yDiff * drag_rate;
+                    mCurrentDragPercent = scrollTop / mTotalDragDistance;
+                    float percent = Math.max(mCurrentDragPercent,-1);
+                    if (percent>0) break;
+                    if (percent<-0.5) {
+                        animateOffsetToStartPosition();
+                    } else{
+                        animateOffsetToCorrectPosition();
+                    }
+                    return true;
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
 
         if (!isEnabled() || canChildScrollUp() || mRefreshing) {
@@ -218,6 +252,7 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
                 int targetY = (int) ((slingshotDist * boundedDragPercent) + extraMove);
                 refreshView.onPercent(mCurrentDragPercent);
                 setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
+
                 break;
             }
             case MotionEventCompat.ACTION_POINTER_DOWN:
@@ -316,7 +351,9 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
         refreshView.onPercent(mCurrentDragPercent);
         mTarget.setPadding(mTargetPaddingLeft, mTargetPaddingTop, mTargetPaddingRight, mTargetPaddingBottom + targetTop);
         setTargetOffsetTop(offset, false);
-
+        if (mTarget.getTop()==0){
+            mRefreshing = false;
+        }
     }
 
     public void setRefreshing(boolean refreshing) {
