@@ -358,6 +358,7 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
 
     private void moveToStart(float interpolatedTime) {
         mRefreshing = false;
+        mNotify = false;
         int targetTop = mFrom - (int) (mFrom * interpolatedTime);
         float targetPercent = mFromDragPercent * (1.0f - interpolatedTime);
         int offset = targetTop - mTarget.getTop();

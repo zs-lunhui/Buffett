@@ -61,9 +61,10 @@ public class ListViewFragment extends BaseRefreshFragment {
 
             @Override
             public void onPercent(float percent) {
-                view.setScaleY((float) Math.min(1, 0.75 + percent * 0.25));
-                view.setScaleX((float) Math.min(1, 0.75 + percent * 0.25));
-                view.setAlpha((float) Math.min(1, 0.5 + percent * 0.5));
+                if (percent<=0) percent+=1;
+                view.setScaleY((float) Math.min(1, percent));
+                view.setScaleX((float) Math.min(1, percent));
+//                view.setAlpha((float) Math.min(1, percent));
             }
         });
         mPullToRefreshView.setRefreshView(refreshView);
