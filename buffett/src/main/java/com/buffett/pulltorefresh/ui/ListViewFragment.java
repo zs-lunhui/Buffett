@@ -147,12 +147,6 @@ public class ListViewFragment extends BaseRefreshFragment {
 
             viewHolder.imageViewIcon.setImageResource(mData.get(position).get(KEY_ICON));
             convertView.setBackgroundResource(mData.get(position).get(KEY_COLOR));
-            viewHolder.imageViewIcon.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mPullToRefreshView.setRefreshing(true,true);
-                }
-            });
             return convertView;
         }
 
@@ -160,6 +154,10 @@ public class ListViewFragment extends BaseRefreshFragment {
             ImageView imageViewIcon;
         }
 
+    }
+
+    public void onRefresh(){
+        mPullToRefreshView.setRefreshing(true);
     }
 
     public void addMoreData(){

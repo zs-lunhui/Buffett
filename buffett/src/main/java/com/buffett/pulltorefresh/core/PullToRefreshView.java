@@ -73,6 +73,8 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
     private FrameLayout refreshContainer;
     private RefreshView refreshView;
 
+    private boolean cleckRefresh;
+
     public PullToRefreshView(Context context) {
         super(context);
         mContext = context;
@@ -154,30 +156,30 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
                     mInitialMotionY = initialMotionY;
                     break;
                 case MotionEvent.ACTION_MOVE: {
+
                     final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
                     final float y = MotionEventCompat.getY(ev, pointerIndex);
                     final float yDiff = y - mInitialMotionY;
                     final float scrollTop = yDiff * drag_rate;
-                    float percent = Math.max(scrollTop / mCurrentOffsetTop,-1);
+                    float percent = Math.max(scrollTop / mTotalDragDistance,-1);
                     mCurrentDragPercent = mCurrentOffsetTop/mTotalDragDistance;
                     if (percent>0) break;
                     Log.d("setTargetOffsetTop",percent+" , "+mCurrentOffsetTop*1.0/mTotalDragDistance+" , "+(percent-1)*mTotalDragDistance+mCurrentOffsetTop+" , "+mCurrentOffsetTop);
-                    int targetY = (int) (mCurrentOffsetTop*(1+percent));
+                    int targetY = (int) (mTotalDragDistance*(1+percent));
                     setTargetOffsetTop((int) (targetY-mCurrentOffsetTop), true);
 
                 }
                 case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL:
-//                {
-//                    float percent = Math.max(mCurrentDragPercent,-1);
-//                    if (percent>0) break;
+                case MotionEvent.ACTION_CANCEL: {
+                    float percent = Math.max(mCurrentDragPercent,-1);
+                    if (percent>0) break;
 //                    if (Math.max(mCurrentDragPercent, -1) > -0.5) {
 //                        animateOffsetToStartPosition();
 //                    } else {
-//                        animateOffsetToCorrectPosition();
+                        animateOffsetToCorrectPosition();
 //                    }
-//                    break;
-//                }
+                    break;
+                }
             }
             Log.d("MotionEvent","dispatchTouchEvent true");
             return true;
@@ -195,9 +197,11 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
 
         final int action = MotionEventCompat.getActionMasked(ev);
         Log.d("MotionEvent","onInterceptTouchEvent");
+        if (mRefreshing) return true;
+        Log.d("事件拦截","onTouchEvent");
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                setTargetOffsetTop(0, true);
+//                setTargetOffsetTop(0, true);
                 mActivePointerId = MotionEventCompat.getPointerId(ev, 0);
                 mIsBeingDragged = false;
                 final float initialMotionY = getMotionEventY(ev, mActivePointerId);
@@ -235,13 +239,14 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent ev) {
 
-        if (!mIsBeingDragged ) {
+        if (!mIsBeingDragged) {
             return super.onTouchEvent(ev);
         }
-        final int action = MotionEventCompat.getActionMasked(ev);
         if (mRefreshing) return true;
-        switch (action) {
+        Log.d("事件拦截","onTouchEvent");
+        final int action = MotionEventCompat.getActionMasked(ev);
 
+        switch (action) {
             case MotionEvent.ACTION_MOVE: {
                 final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
                 if (pointerIndex < 0) {
@@ -252,22 +257,35 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
                 final float scrollTop = yDiff * drag_rate;
                 mCurrentDragPercent = scrollTop / mTotalDragDistance;
 
-                Log.d("mRefreshing", mRefreshing + "");
+//                    float boundedDragPercent = Math.max(-1, mCurrentDragPercent);
+//                    float extraOS = scrollTop + mTotalDragDistance;
+//                    float slingshotDist = mTotalDragDistance;
+//                    float tensionSlingshotPercent = Math.max(0,
+//                            Math.min(extraOS, slingshotDist ) / slingshotDist);
+//                    float tensionPercent = (float) ((tensionSlingshotPercent / 4) - Math.pow(
+//                            (tensionSlingshotPercent / 4), 2)) * 2f;
+//                    float extraMove = (slingshotDist) * tensionPercent / 2;
+//                    int targetY = (int) ((slingshotDist * boundedDragPercent) + extraMove);
+//                    refreshView.onClose(mCurrentDragPercent);
+//                    setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
+//                    break;
+               if (!mRefreshing) {
+                   Log.d("mRefreshing",mRefreshing+"");
                 float boundedDragPercent = Math.min(1f, Math.abs(mCurrentDragPercent));
                 float extraOS = Math.abs(scrollTop) - mTotalDragDistance;
                 float slingshotDist = mTotalDragDistance;
                 float tensionSlingshotPercent = Math.max(0,
-                        Math.min(extraOS, slingshotDist) / slingshotDist);
+                        Math.min(extraOS, slingshotDist ) / slingshotDist);
                 float tensionPercent = (float) ((tensionSlingshotPercent / 4) - Math.pow(
                         (tensionSlingshotPercent / 4), 2)) * 2f;
                 float extraMove = (slingshotDist) * tensionPercent / 2;
                 int targetY = (int) ((slingshotDist * boundedDragPercent) + extraMove);
                 refreshView.onShow(mCurrentDragPercent);
-                Log.d("onTouchEvent MOVE", "extraOS=" + extraOS + ", boundedDragPercent="
-                        + boundedDragPercent + ", tensionSlingshotPercent=" + tensionSlingshotPercent + ", tensionPercent=" + tensionPercent
-                        + ", extraMove=" + extraMove + ", targetY=" + targetY + ",offect=" + (targetY - mCurrentOffsetTop) + "");
-                setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
-
+                   Log.d("onTouchEvent MOVE","extraOS="+extraOS+", boundedDragPercent="
+                           +boundedDragPercent+", tensionSlingshotPercent="+tensionSlingshotPercent+", tensionPercent="+tensionPercent
+                           +", extraMove="+extraMove+", targetY="+targetY+",offect="+(targetY - mCurrentOffsetTop)+"");
+                   setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
+               }
                 break;
             }
             case MotionEventCompat.ACTION_POINTER_DOWN:
@@ -277,36 +295,34 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
             case MotionEventCompat.ACTION_POINTER_UP:
                 onSecondaryPointerUp(ev);
                 break;
-
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
                 if (mActivePointerId == INVALID_POINTER) {
                     return false;
                 }
-
-                final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
-                final float y = MotionEventCompat.getY(ev, pointerIndex);
-                final float overScrollTop = (y - mInitialMotionY) * drag_rate;
-                mIsBeingDragged = false;
-                if (overScrollTop > mTotalDragDistance) {
-                    setRefreshing(true, true);
-                } else {
-                    mRefreshing = false;
-                    animateOffsetToStartPosition();
+                if (!mRefreshing) {
+                    final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
+                    final float y = MotionEventCompat.getY(ev, pointerIndex);
+                    final float overScrollTop = (y - mInitialMotionY) * drag_rate;
+                    mIsBeingDragged = false;
+                    if (overScrollTop > mTotalDragDistance) {
+                        setRefreshing(true);
+                    } else {
+                        mRefreshing = false;
+                        animateOffsetToStartPosition();
+                    }
                 }
-
                 mActivePointerId = INVALID_POINTER;
                 return false;
             }
         }
-
 
         return true;
     }
 
     private void animateOffsetToStartPosition() {
         mFrom = mCurrentOffsetTop;
-        mFromDragPercent = mCurrentOffsetTop/mTotalDragDistance;
+        mFromDragPercent = mCurrentDragPercent;
         long animationDuration = Math.abs((long) (max_offset_animation_duration * mFromDragPercent));
 
         mAnimateToStartPosition.reset();
@@ -356,58 +372,62 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
             targetTop = (mFrom + (int) ((endTarget - mFrom) * interpolatedTime));
             int offset = targetTop - mTarget.getTop();
             mCurrentDragPercent = mFromDragPercent - (mFromDragPercent - 1.0f) * interpolatedTime;
-            refreshView.onShow(mCurrentDragPercent);
+            if (!mRefreshing ){
+                refreshView.onShow(mCurrentDragPercent);
+            }
             int targetOffetset = (int) (offset*interpolatedTime);
             Log.d("interpolatedTime",interpolatedTime+" , "+targetOffetset);
-            setTargetOffsetTop(targetOffetset, false /* requires update */);
+            setTargetOffsetTop(targetOffetset+1, false /* requires update */);
         }
     };
 
     private void moveToStart(float interpolatedTime) {
         if (!mRefreshing){
-            Log.d("interpolatedTime",interpolatedTime+"");
-        int targetTop = mFrom - (int) (mFrom * interpolatedTime);
-        float targetPercent = mFromDragPercent * (1.0f - interpolatedTime);
-        int offset = targetTop - mTarget.getTop();
-        mCurrentDragPercent = targetPercent;
-        refreshView.onShow(mCurrentDragPercent);
-        mTarget.setPadding(mTargetPaddingLeft, mTargetPaddingTop, mTargetPaddingRight, mTargetPaddingBottom);
-            setTargetOffsetTop(offset, true);
-        }else{
-            int targetTop;
-            int endTarget = mTotalDragDistance;
-            targetTop = (mFrom + (int) ((endTarget - mFrom) * interpolatedTime));
+            int targetTop = mFrom - (int) (mFrom * interpolatedTime);
+            float targetPercent = mFromDragPercent * (1.0f - interpolatedTime);
             int offset = targetTop - mTarget.getTop();
-            mCurrentDragPercent = mFromDragPercent - (mFromDragPercent - 1.0f) * interpolatedTime;
-//            refreshView.onShow(mCurrentDragPercent);
-            int targetOffetset = (int) (offset*interpolatedTime);
-            Log.d("interpolatedTime",interpolatedTime+" , "+targetOffetset);
-            setTargetOffsetTop(targetOffetset, false /* requires update */);
+            mCurrentDragPercent = targetPercent;
+            refreshView.onShow(mCurrentDragPercent);
+            mTarget.setPadding(mTargetPaddingLeft, mTargetPaddingTop, mTargetPaddingRight, mTargetPaddingBottom);
+            setTargetOffsetTop(offset, true);
+        } else{
+            int targetTop = mFrom - (int) (mFrom * interpolatedTime);
+            int offset = targetTop - mCurrentOffsetTop;
+            setTargetOffsetTop(offset, true);
         }
+
         mRefreshing = false;
         mNotify = false;
 
     }
 
     public void setRefreshing(boolean refreshing) {
-        if (mRefreshing != refreshing) {
-            setRefreshing(refreshing, false /* notify */);
+//        setRefreshing(refreshing, refreshing /* notify */);
+        if (mRefreshing && refreshing) return;
+        mNotify = refreshing;
+        mRefreshing = refreshing;
+        cleckRefresh = refreshing;
+        ensureTarget();
+        if (mRefreshing) {
+            animateOffsetToCorrectPosition();
+        } else {
+            animateOffsetToStartPosition();
         }
     }
 
-    public void setRefreshing(boolean refreshing, final boolean notify) {
-        if (mRefreshing != refreshing) {
-            mNotify = notify;
-            ensureTarget();
-            mRefreshing = refreshing;
-            if (mRefreshing) {
-//                refreshView.onPercent(1);
-                animateOffsetToCorrectPosition();
-            } else {
-                animateOffsetToStartPosition();
-            }
-        }
-    }
+//    public void setRefreshing(boolean refreshing, final boolean notify) {
+//        if (mRefreshing != refreshing) {
+//            mNotify = notify;
+//            ensureTarget();
+//            mRefreshing = refreshing;
+//            if (mRefreshing) {
+////                refreshView.onPercent(1);
+//                animateOffsetToCorrectPosition();
+//            } else {
+//                animateOffsetToStartPosition();
+//            }
+//        }
+//    }
 
     private Animation.AnimationListener mToStartListener = new Animation.AnimationListener() {
         @Override
@@ -446,11 +466,17 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
 //        if (mCurrentOffsetTop<0 || mCurrentOffsetTop>mTotalDragDistance+50) return;
         mTarget.offsetTopAndBottom(offset);
         mCurrentOffsetTop = mTarget.getTop();
+        if (cleckRefresh){
+            refreshView.onShow(mCurrentOffsetTop*1.0f/mTotalDragDistance);
+        }
         if (requiresUpdate && Build.VERSION.SDK_INT < 11) {
             invalidate();
         }
         if (mCurrentOffsetTop==0){
-            mRefreshing = false;
+            mRefreshing=false;
+        }
+        if (mCurrentOffsetTop==mTotalDragDistance){
+            cleckRefresh = false;
         }
     }
 

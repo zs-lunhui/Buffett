@@ -7,7 +7,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.Button;
 
 import com.buffett.pulltorefresh.R;
 
@@ -16,21 +17,29 @@ import com.buffett.pulltorefresh.R;
  */
 public class PullToRefreshActivity extends AppCompatActivity {
 
+    private ListViewFragment listViewFragment;
+    private Button btn_refresh;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pull_to_refresh);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+        btn_refresh = (Button) findViewById(R.id.btn_refresh);
 
-        if (toolbar != null) {
-            setSupportActionBar(toolbar);
-        }
 
         viewPager.setAdapter(new SectionPagerAdapter(getSupportFragmentManager()));
         tabLayout.setupWithViewPager(viewPager);
+        btn_refresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (null != listViewFragment){
+                    listViewFragment.mListView.setSelection(0);
+                    listViewFragment.onRefresh();
+                }
+            }
+        });
     }
 
     public class SectionPagerAdapter extends FragmentPagerAdapter {
@@ -43,7 +52,10 @@ public class PullToRefreshActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
-                    return new ListViewFragment();
+                    if (null == listViewFragment){
+                        listViewFragment = new ListViewFragment();
+                    }
+                    return listViewFragment;
                 case 1:
                 default:
                     return new RecyclerViewFragment();
