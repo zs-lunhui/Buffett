@@ -7,15 +7,15 @@
     <ImageView
         android:id="@+id/img_header"
         android:layout_width="match_parent"
-        android:layout_height="90dp"
+        android:layout_height="70dp"
         android:padding="4dp"
         android:src="@drawable/buildings"
         />
     <TextView
         android:id="@+id/tv_header"
         android:layout_width="match_parent"
-        android:layout_height="26dp"
-        android:textSize="20sp"
+        android:layout_height="20dp"
+        android:textSize="18sp"
         android:text="FUCK"
         android:layout_gravity="center"
         android:gravity="center"

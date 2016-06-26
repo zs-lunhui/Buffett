@@ -9,7 +9,9 @@ public interface  RefreshView{
 
     View getView();
 
-    void onPercent(float percent);
+    void onShow(float percent);
+
+    void onClose(float percent);
 
 
 

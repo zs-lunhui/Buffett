@@ -37,12 +37,22 @@ public class MyRefreshView extends RelativeLayout implements RefreshView{
     }
 
     @Override
-    public void onPercent(float percent) {
+    public void onShow(float percent) {
         if (null == refreshView) {
             getView().setScaleY((float) Math.min(1, 0.5 + percent * 0.5));
             getView().setScaleX((float) Math.min(1, 0.5 + percent * 0.5));
         } else{
-            refreshView.onPercent(percent);
+            refreshView.onShow(percent);
+        }
+    }
+
+    @Override
+    public void onClose(float percent) {
+        if (null == refreshView) {
+            getView().setScaleY((float) Math.min(1, 0.5 + percent * 0.5));
+            getView().setScaleX((float) Math.min(1, 0.5 + percent * 0.5));
+        } else{
+            refreshView.onClose(percent);
         }
     }
 

@@ -60,8 +60,15 @@ public class ListViewFragment extends BaseRefreshFragment {
             }
 
             @Override
-            public void onPercent(float percent) {
-                if (percent<=0) percent+=1;
+            public void onShow(float percent) {
+                view.setScaleY((float) Math.min(1, 0.9+percent*0.1));
+                view.setScaleX((float) Math.min(1, 0.9+percent*0.1));
+//                view.setAlpha((float) Math.min(1, percent));
+            }
+
+            @Override
+            public void onClose(float percent) {
+                percent+=1;
                 view.setScaleY((float) Math.min(1, percent));
                 view.setScaleX((float) Math.min(1, percent));
 //                view.setAlpha((float) Math.min(1, percent));
