@@ -42,7 +42,7 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
 
     public static final int STYLE_SUN = 0;
 
-    public int max_offset_animation_duration = 700; //最大偏移动画持续时间
+    public int max_offset_animation_duration = 1000; //最大偏移动画持续时间
     public void setMax_offset_animation_duration(int max_offset_animation_duration) {
         this.max_offset_animation_duration = max_offset_animation_duration;
     }
@@ -172,9 +172,7 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL: {
                     Log.d("ACTION_CANCEL","ACTION_CANCEL");
-                    float percent = Math.max(mCurrentDragPercent,-1);
-                    if (percent>0) break;
-                    if (Math.max(mCurrentDragPercent, -1) > -0.5) {
+                    if (mCurrentOffsetTop < mTotalDragDistance/2) {
                         animateOffsetToStartPosition();
                     } else {
                         animateOffsetToCorrectPosition();
@@ -323,7 +321,7 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
 
     private void animateOffsetToStartPosition() {
         mFrom = mCurrentOffsetTop;
-        mFromDragPercent = mCurrentDragPercent;
+        mFromDragPercent = mFrom*1.0f/mTotalDragDistance;
         long animationDuration = Math.abs((long) (max_offset_animation_duration * mFromDragPercent));
 
         mAnimateToStartPosition.reset();
@@ -393,7 +391,8 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
             setTargetOffsetTop(offset, true);
         } else{
             int targetTop = mFrom - (int) (mFrom * interpolatedTime);
-            int offset = targetTop - mCurrentOffsetTop;
+            int offset = targetTop - mTarget.getTop();
+            Log.d("moveToStart",interpolatedTime+" , "+offset);
             setTargetOffsetTop(offset, true);
         }
 
