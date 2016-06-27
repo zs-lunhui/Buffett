@@ -171,13 +171,14 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
                 }
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL: {
+                    Log.d("ACTION_CANCEL","ACTION_CANCEL");
                     float percent = Math.max(mCurrentDragPercent,-1);
                     if (percent>0) break;
-//                    if (Math.max(mCurrentDragPercent, -1) > -0.5) {
-//                        animateOffsetToStartPosition();
-//                    } else {
+                    if (Math.max(mCurrentDragPercent, -1) > -0.5) {
+                        animateOffsetToStartPosition();
+                    } else {
                         animateOffsetToCorrectPosition();
-//                    }
+                    }
                     break;
                 }
             }
