@@ -58,8 +58,9 @@ public class ListViewFragment extends BaseRefreshFragment {
 //        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Utils.convertDpToPixel(getActivity(),90));
 //        refreshView.setLayoutParams(params);
         refreshView.setRefreshView(new RefreshView() {
-            View view = inflater.inflate(R.layout.logo_layout,null);
+            View view = inflater.inflate(R.layout.logo_layout, null);
             LoGo logo = (LoGo) view.findViewById(R.id.logo);
+
             @Override
             public View getView() {
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
@@ -107,11 +108,11 @@ public class ListViewFragment extends BaseRefreshFragment {
                 mVisibleLastIndex = firstVisibleItem + visibleItemCount - 1;
 
                 if (firstVisibleItem > lastVisibleItemPosition) {
-                    Log.d("getOnScroll","UP");
+                    Log.d("getOnScroll", "UP");
                 }
 
                 if (firstVisibleItem < lastVisibleItemPosition) {
-                    Log.d("getOnScroll","DOWN");
+                    Log.d("getOnScroll", "DOWN");
                 }
 
                 if (firstVisibleItem == lastVisibleItemPosition) {
@@ -177,11 +178,11 @@ public class ListViewFragment extends BaseRefreshFragment {
 
     }
 
-    public void onRefresh(){
+    public void onRefresh() {
         mPullToRefreshView.setRefreshing(true);
     }
 
-    public void addMoreData(){
+    public void addMoreData() {
         if (null == mAdapter) return;
         int[] icons = {
                 R.drawable.icon_1,
@@ -202,7 +203,7 @@ public class ListViewFragment extends BaseRefreshFragment {
         mAdapter.notifyDataSetChanged();
     }
 
-    public void refreshData(){
+    public void refreshData() {
         if (null == mAdapter) return;
         mAdapter.clear();
         int[] icons = {

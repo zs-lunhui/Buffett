@@ -1,42 +1,62 @@
 package com.buffett.pulltorefresh.refresh_view;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 
 import com.buffett.pulltorefresh.R;
 import com.buffett.pulltorefresh.core.RefreshView;
+import com.buffett.pulltorefresh.util.Logger;
 
 /**
  * Created by lisao on 16/6/27.
  */
-public class LoGo extends View implements RefreshView{
+public class LoGo extends View implements RefreshView {
 
-    private int measureHeight;//获取控件实际占用的高度
     private int measureWidth;//获取控件实际占用的宽度
 
-    private int height;//绘图区域的高度
     private int width;//绘图区域的宽度
-
     private int radius;//圆点半径
 
     private Paint paint;
+
+    private Paint loadingPaint_1;
+
+    private Paint loadingPaint_2;
+
+    private int ladingAlpha;
 
     private int padding;//绘图区域与实际的宽度
 
     private int duration = 0;//持续时间
 
-    private static final int TOTAL_TIME = 80;
+    private int color_1;
+    private int color_2;
+    private int color_3;
 
-    private static final int LOADING_1 = TOTAL_TIME / 3;//加载第一圆和5个小圆所用的时间
+    private static final int TOTAL_TIME = 100;
 
-    private static final int LOADING_2 = TOTAL_TIME / 3 * 2;
+    private static final float LOADING_1 = TOTAL_TIME / 3f;//加载第一圆和5个小圆所用的时间
 
-    private float offset;//坐标偏移量
+    private static final float LOADING_2 = TOTAL_TIME / 3f * 2;
+
+    private Status drawStatus;
+
+    private float offset_X0;//坐标偏移量0倍
+    private float offset_X1;//坐标偏移量1倍
+    private float offset_X2;//坐标偏移量2倍
+    private float offset_X3;//坐标偏移量3倍
+    private float offset_X4;//坐标偏移量4倍
 
     private float percent;
     private boolean loading;
@@ -52,29 +72,37 @@ public class LoGo extends View implements RefreshView{
 
     public LoGo(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.LOGO);
-        radius = array.getDimensionPixelSize(R.styleable.LOGO_point_radius, 10);
-        padding = array.getDimensionPixelSize(R.styleable.LOGO_draw_padding, 10);
+        TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.LoGo);
+        radius = array.getDimensionPixelSize(R.styleable.LoGo_point_radius, 10);
+        padding = array.getDimensionPixelSize(R.styleable.LoGo_draw_padding, 10);
         array.recycle();
-        offset = width / 4;
+        initColor();
+    }
+
+    private void initColor() {
+        color_1 = Color.parseColor("#861C21");
+        color_2 = Color.parseColor("#B51C2D");
+        color_3 = Color.parseColor("#E73733");
     }
 
     @Override
     public void draw(Canvas canvas) {
-        super.draw(canvas);
         initPaint();//初始化画笔工具
-        //1.先把所有的点一次画出来
-        if (!loading){
+        Logger.d("status:" + drawStatus);
+        if (drawStatus == Status.START && !loading) {//开始状态
             drawFirstPoint(canvas);
-        }else {
+        } else if (drawStatus == Status.DRAWING) {
+            //1.先把所有的点一次画出来
             drawAllPoint(canvas);//画出所有的点
-            if (duration < TOTAL_TIME)
-                duration++;
-            else
-                duration = 0;
+        } else if (drawStatus == Status.LOADING) {//加载的状态
+            drawAllPoint(canvas);
+            drawLoading(canvas);
+        } else {
+            drawEnding(canvas);
         }
-        invalidate();
+        super.draw(canvas);
     }
+
 
     /**
      * 初始化画笔
@@ -84,6 +112,17 @@ public class LoGo extends View implements RefreshView{
             paint = new Paint();
         }
         paint.setAntiAlias(true);
+        if (loadingPaint_1 == null) {
+            loadingPaint_1 = new Paint();
+            loadingPaint_1.setStrokeWidth(radius / 2);
+        }
+        loadingPaint_1.setAntiAlias(true);
+
+        if (loadingPaint_2 == null) {
+            loadingPaint_2 = new Paint();
+            loadingPaint_2.setStrokeWidth(radius / 2);
+        }
+        loadingPaint_2.setAntiAlias(true);
     }
 
     /**
@@ -94,22 +133,22 @@ public class LoGo extends View implements RefreshView{
     private void drawAllPoint(Canvas canvas) {
         //先画中心点
         if (duration < LOADING_1) {//第一阶段
-            canvas.drawCircle(padding + width / 2, padding + width / 2, 1f * radius / LOADING_1 * duration, paint);
+            canvas.drawCircle(offset_X2, offset_X2, 1f * radius / LOADING_1 * duration, paint);
         } else {
-            canvas.drawCircle(padding + width / 2, padding + width / 2, 1f * radius, paint);
+            canvas.drawCircle(offset_X2, offset_X2, 1f * radius, paint);
         }
         if (duration > LOADING_1 / 2 && duration < LOADING_1) {
-            canvas.drawCircle(padding, padding, 1f * radius / LOADING_1 * duration, paint);
-            canvas.drawCircle((float) (padding + width / 4), (float) (padding + height / 4), 1f * radius / LOADING_1 * duration, paint);
+            canvas.drawCircle(offset_X0, offset_X0, 1f * radius / LOADING_1 * duration, paint);
+            canvas.drawCircle(offset_X1, offset_X1, 1f * radius / LOADING_1 * duration, paint);
 
-            canvas.drawCircle((float) (padding + width / 4 * 3), (float) (padding + height / 4 * 3), 1f * radius / LOADING_1 * duration, paint);
-            canvas.drawCircle((float) (padding + width), (float) (padding + height), 1f * radius / LOADING_1 * duration, paint);
+            canvas.drawCircle(offset_X3, offset_X3, 1f * radius / LOADING_1 * duration, paint);
+            canvas.drawCircle(offset_X4, offset_X4, 1f * radius / LOADING_1 * duration, paint);
         } else if (duration >= LOADING_1) {
-            canvas.drawCircle(padding, padding, radius, paint);
-            canvas.drawCircle((float) (padding + width / 4), (float) (padding + height / 4), radius, paint);
+            canvas.drawCircle(offset_X0, offset_X0, radius, paint);
+            canvas.drawCircle(offset_X1, offset_X1, radius, paint);
 
-            canvas.drawCircle((float) (padding + width / 4 * 3), (float) (padding + height / 4 * 3), radius, paint);
-            canvas.drawCircle((float) (padding + width), (float) (padding + height), radius, paint);
+            canvas.drawCircle(offset_X3, offset_X3, radius, paint);
+            canvas.drawCircle(offset_X4, offset_X4, radius, paint);
         }
         if (duration >= LOADING_1 && duration <= LOADING_2) {
             canvas.drawCircle((padding + width / 4) + (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), (padding + width / 4) - (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), paint);
@@ -130,18 +169,207 @@ public class LoGo extends View implements RefreshView{
         }
     }
 
-    private void drawFirstPoint(Canvas canvas){
-            canvas.drawCircle(padding + width / 2, padding + width / 2, (float) (1f * width *Math.max(1-percent,0.2)/ 2), paint);
+    /**
+     * 绘制加载的状态
+     *
+     * @param canvas
+     */
+    private void drawLoading(Canvas canvas) {
+        loadingPaint_1.setAlpha(ladingAlpha);
+        loadingPaint_2.setAlpha(ladingAlpha);
+        Path path = new Path();
+        float centerX = (offset_X1 + offset_X2) / 2f;
+        float centerY = (offset_X1 + offset_X0) / 2f;
+
+        path.moveTo(offset_X1 - (float) (radius * Math.cos(45)), (float) (offset_X1 - radius * Math.sin(45)));//起点
+        path.lineTo((float) (offset_X1 + radius * Math.cos(45)), (float) (offset_X1 + radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X2 + radius * Math.cos(45)), (float) (offset_X0 + radius * Math.sin(45)));
+        path.lineTo((float) (offset_X2 - radius * Math.cos(45)), (float) (offset_X0 - radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X1 - radius * Math.cos(45)), (float) (offset_X1 - radius * Math.sin(45)));
+        canvas.drawPath(path, loadingPaint_2);
+        path.reset();
+
+        centerX = (offset_X2 + offset_X3) / 2f;
+        centerY = (offset_X2 + offset_X1) / 2f;
+        path.moveTo(offset_X2 - (float) (radius * Math.cos(45)), (float) (offset_X2 - radius * Math.sin(45)));//起点
+        path.lineTo((float) (offset_X2 + radius * Math.cos(45)), (float) (offset_X2 + radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X3 + radius * Math.cos(45)), (float) (offset_X1 + radius * Math.sin(45)));
+        path.lineTo((float) (offset_X3 - radius * Math.cos(45)), (float) (offset_X1 - radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X2 - radius * Math.cos(45)), (float) (offset_X2 - radius * Math.sin(45)));
+        canvas.drawPath(path, loadingPaint_1);
+        path.reset();
+
+        centerX = (offset_X3 + offset_X4) / 2f;
+        centerY = (offset_X1 + offset_X0) / 2f;
+        path.moveTo(offset_X3 - (float) (radius * Math.cos(45)), (float) (offset_X1 - radius * Math.sin(45)));//起点
+        path.lineTo((float) (offset_X3 + radius * Math.cos(45)), (float) (offset_X1 + radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X4 + radius * Math.cos(45)), (float) (offset_X0 + radius * Math.sin(45)));
+        path.lineTo((float) (offset_X4 - radius * Math.cos(45)), (float) (offset_X0 - radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X3 - radius * Math.cos(45)), (float) (offset_X1 - radius * Math.sin(45)));
+        canvas.drawPath(path, loadingPaint_1);
+        path.reset();
+
+        centerX = (offset_X0 + offset_X1) / 2f;
+        centerY = (offset_X4 + offset_X3) / 2f;
+        path.moveTo(offset_X0 - (float) (radius * Math.cos(45)), (float) (offset_X4 - radius * Math.sin(45)));//起点
+        path.lineTo((float) (offset_X0 + radius * Math.cos(45)), (float) (offset_X4 + radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X1 + radius * Math.cos(45)), (float) (offset_X3 + radius * Math.sin(45)));
+        path.lineTo((float) (offset_X1 - radius * Math.cos(45)), (float) (offset_X3 - radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X0 - radius * Math.cos(45)), (float) (offset_X4 - radius * Math.sin(45)));
+        canvas.drawPath(path, loadingPaint_1);
+        path.reset();
+
+        centerX = (offset_X1 + offset_X2) / 2f;
+        centerY = (offset_X3 + offset_X2) / 2f;
+        path.moveTo(offset_X1 - (float) (radius * Math.cos(45)), (float) (offset_X3 - radius * Math.sin(45)));//起点
+        path.lineTo((float) (offset_X1 + radius * Math.cos(45)), (float) (offset_X3 + radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X2 + radius * Math.cos(45)), (float) (offset_X2 + radius * Math.sin(45)));
+        path.lineTo((float) (offset_X2 - radius * Math.cos(45)), (float) (offset_X2 - radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X1 - radius * Math.cos(45)), (float) (offset_X3 - radius * Math.sin(45)));
+        canvas.drawPath(path, loadingPaint_1);
+        path.reset();
+
+        centerX = (offset_X3 + offset_X2) / 2f;
+        centerY = (offset_X3 + offset_X4) / 2f;
+        path.moveTo(offset_X3 - (float) (radius * Math.cos(45)), (float) (offset_X3 - radius * Math.sin(45)));//起点
+        path.lineTo((float) (offset_X3 + radius * Math.cos(45)), (float) (offset_X3 + radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X2 + radius * Math.cos(45)), (float) (offset_X4 + radius * Math.sin(45)));
+        path.lineTo((float) (offset_X2 - radius * Math.cos(45)), (float) (offset_X4 - radius * Math.sin(45)));
+        path.quadTo(centerX, centerY, (float) (offset_X3 - radius * Math.cos(45)), (float) (offset_X3 - radius * Math.sin(45)));
+        canvas.drawPath(path, loadingPaint_2);
+        path.reset();
+
+    }
+
+    private void drawEnding(Canvas canvas) {
+        if (duration <= LOADING_1) {//第一阶段
+            canvas.drawCircle(offset_X0 + (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, paint);
+            canvas.drawCircle(offset_X2 - (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, paint);
+            canvas.drawCircle(offset_X4 - (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, paint);
+
+            canvas.drawCircle(offset_X0 + (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, paint);
+            canvas.drawCircle(offset_X2 + (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, paint);
+            canvas.drawCircle(offset_X4 - (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, paint);
+
+            canvas.drawCircle(offset_X2, offset_X2, radius, paint);
+            canvas.drawCircle(offset_X1, offset_X1, radius, paint);
+            canvas.drawCircle(offset_X1, offset_X3, radius, paint);
+            canvas.drawCircle(offset_X3, offset_X1, radius, paint);
+            canvas.drawCircle(offset_X3, offset_X3, radius, paint);
+        } else if (duration >= LOADING_1 && duration <= LOADING_2) {
+
+            canvas.drawCircle(offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, paint);
+            canvas.drawCircle(offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, paint);
+            canvas.drawCircle(offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, paint);
+            canvas.drawCircle(offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, paint);
+
+            canvas.drawCircle(offset_X2, offset_X2, radius, paint);
+        } else if (duration > LOADING_2) {
+
+            canvas.drawCircle(offset_X2, offset_X2, radius * (TOTAL_TIME - duration) / (TOTAL_TIME - LOADING_2), paint);
+        }
     }
 
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        measureHeight = getHeight();
+        super.onMeasure(widthMeasureSpec, widthMeasureSpec);//设置成高度和宽度一样
         measureWidth = getWidth();
-        height = measureHeight - 2 * padding;
         width = measureWidth - 2 * padding;
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        offset_X0 = padding;
+        offset_X1 = width / 4 + padding;
+        offset_X2 = width / 2 + padding;
+        offset_X3 = width / 4 * 3 + padding;
+        offset_X4 = width + padding;
+    }
+
+    public void startDraw() {
+        setStatus(Status.DRAWING);
+        ValueAnimator valueAnimator = new ValueAnimator();
+        valueAnimator.setDuration(500);//设置持续时间
+        valueAnimator.setIntValues(0, TOTAL_TIME);//设置渐变
+        valueAnimator.setInterpolator(new LinearInterpolator());
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                duration = (int) animation.getAnimatedValue();
+                Logger.d("addUpdateListener: " + duration);
+                postInvalidate();
+            }
+        });
+        valueAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                setStatus(Status.LOADING);
+                loading();
+            }
+        });
+        valueAnimator.start();
+    }
+
+
+    public void loading() {
+        ValueAnimator valueAnimator = new ValueAnimator();
+        valueAnimator.setDuration(650);//设置持续时间
+        valueAnimator.setIntValues(0, 15);
+        valueAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                ladingAlpha = (int) animation.getAnimatedValue() * (int) animation.getAnimatedValue();
+                invalidate();
+            }
+        });
+//        valueAnimator.addListener(new AnimatorListenerAdapter() {
+//            @Override
+//            public void onAnimationEnd(Animator animation) {
+//                finish();
+//            }
+//        });
+        valueAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        valueAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        valueAnimator.start();
+    }
+
+    public void finish() {
+        setStatus(Status.ENDING);
+        ValueAnimator valueAnimator = new ValueAnimator();
+        valueAnimator.setDuration(500);//设置持续时间
+        valueAnimator.setIntValues(0, TOTAL_TIME);//设置渐变
+        valueAnimator.setInterpolator(new LinearInterpolator());
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                duration = (int) animation.getAnimatedValue();
+                invalidate();
+            }
+        });
+        valueAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+//                startDraw();
+            }
+        });
+        valueAnimator.start();
+    }
+
+
+    /**
+     * 设置第一个点的位置
+     *
+     * @param canvas
+     */
+    private void drawFirstPoint(Canvas canvas) {
+        canvas.drawCircle(padding + width / 2, padding + width / 2, (float) (1f * width * Math.max(1 - percent, 0.2) / 2), paint);
+    }
+
+    /**
+     * 设置绘制的阶段状态
+     *
+     * @param status 阶段状态
+     */
+    public void setStatus(Status status) {
+        this.drawStatus = status;
     }
 
     @Override
@@ -152,26 +380,37 @@ public class LoGo extends View implements RefreshView{
     @Override
     public void onShow(float percent) {
         this.percent = percent;
-        if (percent<1){
-            duration = 0;
-        }
-        Log.d("LoGo",percent+" , "+(float) (1f * width *Math.max(1-percent,0.2)/ 2));
+        if (!loading)
+            setStatus(Status.START);
+        invalidate();
     }
 
     @Override
     public void onClose(float percent) {
-        if (percent ==0)duration = 0;
+//        if (percent == 0) duration = 0;
     }
 
     @Override
     public void onLoading() {
+        Logger.d("onLoading");
+        startDraw();
+//        startDraw();
         loading = true;
         stop = false;
     }
 
     @Override
     public void onStop() {
+        finish();
         loading = false;
         stop = true;
     }
+
+    public enum Status {
+        START,//开始状态
+        DRAWING,//绘制状态
+        LOADING,//加载状态
+        ENDING//结束状态
+    }
+
 }

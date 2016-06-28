@@ -7,7 +7,7 @@
         <attr name="headerview" format="reference"/>
     </declare-styleable>
 
-    <declare-styleable name="LOGO">
+    <declare-styleable name="LoGo">
         <attr name="point_radius" format="dimension" />
         <attr name="draw_padding" format="dimension" />
     </declare-styleable>
