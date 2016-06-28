@@ -13,6 +13,10 @@ public interface  RefreshView{
 
     void onClose(float percent);
 
+    void onLoading();
+
+    void onStop();
+
 
 
 }

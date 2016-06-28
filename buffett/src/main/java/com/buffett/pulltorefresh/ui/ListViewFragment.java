@@ -11,10 +11,12 @@ import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 
 import com.buffett.pulltorefresh.R;
 import com.buffett.pulltorefresh.core.PullToRefreshView;
 import com.buffett.pulltorefresh.core.RefreshView;
+import com.buffett.pulltorefresh.refresh_view.LoGo;
 
 import java.util.HashMap;
 import java.util.List;
@@ -52,26 +54,45 @@ public class ListViewFragment extends BaseRefreshFragment {
             }
         });
         MyRefreshView refreshView = new MyRefreshView(getActivity());
+//        DotAnimationView refreshView = new DotAnimationView(getActivity());
+//        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Utils.convertDpToPixel(getActivity(),90));
+//        refreshView.setLayoutParams(params);
         refreshView.setRefreshView(new RefreshView() {
-            View view = inflater.inflate(R.layout.header_layout,null);
+            View view = inflater.inflate(R.layout.logo_layout,null);
+            LoGo logo = (LoGo) view.findViewById(R.id.logo);
             @Override
             public View getView() {
+                RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+                params.addRule(RelativeLayout.CENTER_IN_PARENT);
+                view.setLayoutParams(params);
                 return view;
             }
 
             @Override
             public void onShow(float percent) {
-                view.setScaleY((float) Math.min(1, 0.9+percent*0.1));
-                view.setScaleX((float) Math.min(1, 0.9+percent*0.1));
+//                view.setScaleY((float) Math.min(1, 0.9+percent*0.1));
+//                view.setScaleX((float) Math.min(1, 0.9+percent*0.1));
 //                view.setAlpha((float) Math.min(1, percent));
+
+                logo.onShow(percent);
             }
 
             @Override
             public void onClose(float percent) {
-                percent+=1;
-                view.setScaleY((float) Math.min(1, percent));
-                view.setScaleX((float) Math.min(1, percent));
+//                percent+=1;
+//                view.setScaleY((float) Math.min(1, percent));
+//                view.setScaleX((float) Math.min(1, percent));
 //                view.setAlpha((float) Math.min(1, percent));
+            }
+
+            @Override
+            public void onLoading() {
+                logo.onLoading();
+            }
+
+            @Override
+            public void onStop() {
+                logo.onStop();
             }
         });
         mPullToRefreshView.setRefreshView(refreshView);

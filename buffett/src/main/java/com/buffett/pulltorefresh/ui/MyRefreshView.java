@@ -56,5 +56,15 @@ public class MyRefreshView extends RelativeLayout implements RefreshView{
         }
     }
 
+    @Override
+    public void onLoading() {
+        refreshView.onLoading();
+    }
+
+    @Override
+    public void onStop() {
+        refreshView.onStop();
+    }
+
 
 }

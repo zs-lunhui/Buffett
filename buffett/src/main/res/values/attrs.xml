@@ -6,4 +6,10 @@
         </attr>
         <attr name="headerview" format="reference"/>
     </declare-styleable>
+
+    <declare-styleable name="LOGO">
+        <attr name="point_radius" format="dimension" />
+        <attr name="draw_padding" format="dimension" />
+    </declare-styleable>
+
 </resources>
