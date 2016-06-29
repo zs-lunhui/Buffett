@@ -25,7 +25,7 @@ import com.buffett.pulltorefresh.util.Utils;
 
 public class PullToRefreshView extends ViewGroup implements Animatable {
 
-    private int drag_max_distance = 100; //阻力最大距离
+    private int drag_max_distance = 80; //阻力最大距离
 
     public void setDrag_max_distance(int drag_max_distance) {
         this.drag_max_distance = drag_max_distance;
@@ -351,11 +351,12 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
             start();
             if (mNotify) {
                 if (mListener != null) {
+                    mNotify = false;
                     mListener.onRefresh();
                 }
             }
         } else {
-            stop();
+//            stop();
             animateOffsetToStartPosition();
         }
         mCurrentOffsetTop = mTarget.getTop();
@@ -425,6 +426,8 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
                 }
             }, 0);
             refreshView.onStop();
+            mNotify = false;
+            mRefreshing = false;
         }
     }
 
@@ -453,7 +456,7 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            stop();
+//            stop();
             mCurrentOffsetTop = mTarget.getTop();
         }
     };
