@@ -17,6 +17,7 @@ import com.buffett.pulltorefresh.R;
 import com.buffett.pulltorefresh.core.PullToRefreshView;
 import com.buffett.pulltorefresh.core.RefreshView;
 import com.buffett.pulltorefresh.refresh_view.LoGo;
+import com.buffett.pulltorefresh.util.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +77,9 @@ public class ListViewFragment extends BaseRefreshFragment {
 //                view.setAlpha((float) Math.min(1, percent));
 
                 logo.onShow(percent);
+                Logger.d("pull:onShow");
             }
+
 
             @Override
             public void onClose(float percent) {
@@ -88,11 +91,13 @@ public class ListViewFragment extends BaseRefreshFragment {
 
             @Override
             public void onLoading() {
+                Logger.d("pull:onLoading");
                 logo.onLoading();
             }
 
             @Override
             public void onStop() {
+                Logger.d("pull:onStop");
                 logo.onStop();
             }
         });

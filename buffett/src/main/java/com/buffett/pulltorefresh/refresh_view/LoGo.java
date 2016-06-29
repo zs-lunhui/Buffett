@@ -60,7 +60,11 @@ public class LoGo extends View implements RefreshView {
 
     private float percent;
     private boolean loading;
-    private boolean stop;
+    private boolean stop = true;
+
+    private ValueAnimator startAnimation;//绘制各个点的动画
+    private ValueAnimator drawingAnimation;//绘制loading状态动画
+    private ValueAnimator endAnimation;//绘制结束动画
 
     public LoGo(Context context) {
         this(context, null);
@@ -79,6 +83,85 @@ public class LoGo extends View implements RefreshView {
         initColor();
     }
 
+    //初始化动画
+    private void initAnimation() {
+        //设置开始动画
+        startAnimation = new ValueAnimator();
+        startAnimation.setDuration(500);//设置持续时间
+        startAnimation.setIntValues(0, TOTAL_TIME);//设置渐变
+        startAnimation.setInterpolator(new LinearInterpolator());
+        startAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                duration = (int) animation.getAnimatedValue();
+                Logger.d("addUpdateListener: " + duration);
+                postInvalidate();
+            }
+        });
+        startAnimation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                setStatus(Status.DRAWING);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                loading();
+            }
+        });
+        //设置loading动画
+        drawingAnimation = new ValueAnimator();
+        drawingAnimation.setDuration(650);//设置持续时间
+        drawingAnimation.setIntValues(0, 15);
+        drawingAnimation.setInterpolator(new AccelerateDecelerateInterpolator());
+        drawingAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                ladingAlpha = (int) animation.getAnimatedValue() * (int) animation.getAnimatedValue();
+                invalidate();
+            }
+        });
+        drawingAnimation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                setStatus(Status.LOADING);
+            }
+        });
+        drawingAnimation.setRepeatCount(ValueAnimator.INFINITE);//设置循环次数
+        drawingAnimation.setRepeatMode(ValueAnimator.REVERSE);
+
+        //设置结束动画
+        endAnimation = new ValueAnimator();
+        endAnimation.setDuration(500);//设置持续时间
+        endAnimation.setIntValues(0, TOTAL_TIME);//设置渐变
+        endAnimation.setInterpolator(new LinearInterpolator());
+        endAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                duration = (int) animation.getAnimatedValue();
+                invalidate();
+            }
+        });
+        endAnimation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                setStatus(Status.ENDING);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        stop = true;
+                    }
+                }, 100);
+            }
+        });
+
+    }
+
+
     private void initColor() {
         color_1 = Color.parseColor("#861C21");
         color_2 = Color.parseColor("#B51C2D");
@@ -88,7 +171,7 @@ public class LoGo extends View implements RefreshView {
     @Override
     public void draw(Canvas canvas) {
         initPaint();//初始化画笔工具
-        Logger.d("status:" + drawStatus);
+        initAnimation();
         if (drawStatus == Status.START && !loading) {//开始状态
             drawFirstPoint(canvas);
         } else if (drawStatus == Status.DRAWING) {
@@ -265,7 +348,6 @@ public class LoGo extends View implements RefreshView {
 
             canvas.drawCircle(offset_X2, offset_X2, radius, paint);
         } else if (duration > LOADING_2) {
-
             canvas.drawCircle(offset_X2, offset_X2, radius * (TOTAL_TIME - duration) / (TOTAL_TIME - LOADING_2), paint);
         }
     }
@@ -284,75 +366,20 @@ public class LoGo extends View implements RefreshView {
     }
 
     public void startDraw() {
-        setStatus(Status.DRAWING);
-        ValueAnimator valueAnimator = new ValueAnimator();
-        valueAnimator.setDuration(500);//设置持续时间
-        valueAnimator.setIntValues(0, TOTAL_TIME);//设置渐变
-        valueAnimator.setInterpolator(new LinearInterpolator());
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                duration = (int) animation.getAnimatedValue();
-                Logger.d("addUpdateListener: " + duration);
-                postInvalidate();
-            }
-        });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                setStatus(Status.LOADING);
-                loading();
-            }
-        });
-        valueAnimator.start();
+        if (!startAnimation.isRunning())
+            startAnimation.start();
     }
 
 
     public void loading() {
-        ValueAnimator valueAnimator = new ValueAnimator();
-        valueAnimator.setDuration(650);//设置持续时间
-        valueAnimator.setIntValues(0, 15);
-        valueAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                ladingAlpha = (int) animation.getAnimatedValue() * (int) animation.getAnimatedValue();
-                invalidate();
-            }
-        });
-//        valueAnimator.addListener(new AnimatorListenerAdapter() {
-//            @Override
-//            public void onAnimationEnd(Animator animation) {
-//                finish();
-//            }
-//        });
-        valueAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        valueAnimator.setRepeatMode(ValueAnimator.REVERSE);
-        valueAnimator.start();
+        if (!drawingAnimation.isRunning())
+            drawingAnimation.start();
     }
 
     public void finish() {
-        setStatus(Status.ENDING);
-        ValueAnimator valueAnimator = new ValueAnimator();
-        valueAnimator.setDuration(500);//设置持续时间
-        valueAnimator.setIntValues(0, TOTAL_TIME);//设置渐变
-        valueAnimator.setInterpolator(new LinearInterpolator());
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                duration = (int) animation.getAnimatedValue();
-                invalidate();
-            }
-        });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-//                startDraw();
-            }
-        });
-        valueAnimator.start();
+        if (!endAnimation.isRunning())
+            endAnimation.start();
     }
-
 
     /**
      * 设置第一个点的位置
@@ -380,9 +407,10 @@ public class LoGo extends View implements RefreshView {
     @Override
     public void onShow(float percent) {
         this.percent = percent;
-        if (!loading)
+        if (!loading && stop) {
             setStatus(Status.START);
-        invalidate();
+            postInvalidate();
+        }
     }
 
     @Override
@@ -394,7 +422,6 @@ public class LoGo extends View implements RefreshView {
     public void onLoading() {
         Logger.d("onLoading");
         startDraw();
-//        startDraw();
         loading = true;
         stop = false;
     }
@@ -403,7 +430,6 @@ public class LoGo extends View implements RefreshView {
     public void onStop() {
         finish();
         loading = false;
-        stop = true;
     }
 
     public enum Status {
