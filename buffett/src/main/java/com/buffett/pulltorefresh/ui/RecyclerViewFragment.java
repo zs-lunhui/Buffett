@@ -53,9 +53,9 @@ public class RecyclerViewFragment extends BaseRefreshFragment {
 
             @Override
             public View getView() {
-                RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-                params.addRule(RelativeLayout.CENTER_IN_PARENT);
-                view.setLayoutParams(params);
+//                RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+//                params.addRule(RelativeLayout.CENTER_IN_PARENT);
+//                view.setLayoutParams(params);
                 return view;
             }
 
