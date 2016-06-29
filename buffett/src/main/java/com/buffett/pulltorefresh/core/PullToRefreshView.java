@@ -261,18 +261,6 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
                 final float scrollTop = yDiff * drag_rate;
                 mCurrentDragPercent = scrollTop / mTotalDragDistance;
 
-//                    float boundedDragPercent = Math.max(-1, mCurrentDragPercent);
-//                    float extraOS = scrollTop + mTotalDragDistance;
-//                    float slingshotDist = mTotalDragDistance;
-//                    float tensionSlingshotPercent = Math.max(0,
-//                            Math.min(extraOS, slingshotDist ) / slingshotDist);
-//                    float tensionPercent = (float) ((tensionSlingshotPercent / 4) - Math.pow(
-//                            (tensionSlingshotPercent / 4), 2)) * 2f;
-//                    float extraMove = (slingshotDist) * tensionPercent / 2;
-//                    int targetY = (int) ((slingshotDist * boundedDragPercent) + extraMove);
-//                    refreshView.onClose(mCurrentDragPercent);
-//                    setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
-//                    break;
                 if (!mRefreshing) {
                     Log.d("mRefreshing", mRefreshing + "");
                     float boundedDragPercent = Math.min(1f, Math.abs(mCurrentDragPercent));
@@ -431,19 +419,6 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
         }
     }
 
-//    public void setRefreshing(boolean refreshing, final boolean notify) {
-//        if (mRefreshing != refreshing) {
-//            mNotify = notify;
-//            ensureTarget();
-//            mRefreshing = refreshing;
-//            if (mRefreshing) {
-////                refreshView.onPercent(1);
-//                animateOffsetToCorrectPosition();
-//            } else {
-//                animateOffsetToStartPosition();
-//            }
-//        }
-//    }
 
     private Animation.AnimationListener mToStartListener = new Animation.AnimationListener() {
         @Override

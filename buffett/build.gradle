@@ -30,3 +30,7 @@ dependencies {
     compile 'com.android.support:support-v4:23.1.1'
     compile 'com.android.support:design:23.1.1'
 }
+
+dependencies{
+    androidTestCompile 'com.jayway.android.robotium:robotium-solo:5.6.0'
+}

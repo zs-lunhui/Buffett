@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
@@ -427,7 +428,8 @@ public class LoGo extends View implements RefreshView {
      * @param canvas
      */
     private void drawFirstPoint(Canvas canvas) {
-        canvas.drawCircle(offset_X2, offset_X2, (float) (1f * width * Math.max(1 - percent, 0.2) / 2), pointPaint_L);
+        canvas.drawCircle(offset_X2, offset_X2, Math.max((1-percent)*width,radius), pointPaint_L);
+        Log.d("radius",Math.max((1-percent)*width/2,radius)+"");
     }
 
     /**
