@@ -424,7 +424,7 @@ public class PullToRefreshView extends ViewGroup implements Animatable {
                 public void run() {
                     animateOffsetToStartPosition();
                 }
-            }, 0);
+            }, 300);
             refreshView.onStop();
             mNotify = false;
             mRefreshing = false;

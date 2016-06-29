@@ -28,11 +28,16 @@ public class LoGo extends View implements RefreshView {
     private int width;//绘图区域的宽度
     private int radius;//圆点半径
 
-    private Paint paint;
 
+    private Paint pointPaint_S = new Paint();
+    private Paint pointPaint_M = new Paint();
+    private Paint pointPaint_L = new Paint();
+
+    //加载时的画笔
     private Paint loadingPaint_1;
 
     private Paint loadingPaint_2;
+
 
     private int ladingAlpha;
 
@@ -40,9 +45,9 @@ public class LoGo extends View implements RefreshView {
 
     private int duration = 0;//持续时间
 
-    private int color_1;
-    private int color_2;
-    private int color_3;
+    private int color_S;//深色
+    private int color_M;//中间色
+    private int color_L;//亮色
 
     private static final int TOTAL_TIME = 100;
 
@@ -163,9 +168,9 @@ public class LoGo extends View implements RefreshView {
 
 
     private void initColor() {
-        color_1 = Color.parseColor("#861C21");
-        color_2 = Color.parseColor("#B51C2D");
-        color_3 = Color.parseColor("#E73733");
+        color_S = Color.parseColor("#8E0A1D");//深
+        color_M = Color.parseColor("#C1142D");//中
+        color_L = Color.parseColor("#FC3030");//亮
     }
 
     @Override
@@ -191,12 +196,9 @@ public class LoGo extends View implements RefreshView {
      * 初始化画笔
      */
     private void initPaint() {
-        if (paint == null) {
-            paint = new Paint();
-        }
-        paint.setAntiAlias(true);
         if (loadingPaint_1 == null) {
             loadingPaint_1 = new Paint();
+            loadingPaint_1.setColor(color_L);
             loadingPaint_1.setStrokeWidth(radius / 2);
         }
         loadingPaint_1.setAntiAlias(true);
@@ -204,8 +206,17 @@ public class LoGo extends View implements RefreshView {
         if (loadingPaint_2 == null) {
             loadingPaint_2 = new Paint();
             loadingPaint_2.setStrokeWidth(radius / 2);
+            loadingPaint_2.setColor(color_M);
         }
         loadingPaint_2.setAntiAlias(true);
+
+        pointPaint_S.setAntiAlias(true);
+        pointPaint_M.setAntiAlias(true);
+        pointPaint_L.setAntiAlias(true);
+
+        pointPaint_S.setColor(color_S);
+        pointPaint_M.setColor(color_M);
+        pointPaint_L.setColor(color_L);
     }
 
     /**
@@ -216,39 +227,50 @@ public class LoGo extends View implements RefreshView {
     private void drawAllPoint(Canvas canvas) {
         //先画中心点
         if (duration < LOADING_1) {//第一阶段
-            canvas.drawCircle(offset_X2, offset_X2, 1f * radius / LOADING_1 * duration, paint);
+            pointPaint_L.setAlpha((int) (255f / LOADING_1 * duration));
+            canvas.drawCircle(offset_X2, offset_X2, 1f * radius / LOADING_1 * duration, pointPaint_L);
         } else {
-            canvas.drawCircle(offset_X2, offset_X2, 1f * radius, paint);
+            pointPaint_L.setAlpha(255);
+            canvas.drawCircle(offset_X2, offset_X2, 1f * radius, pointPaint_L);
         }
         if (duration > LOADING_1 / 2 && duration < LOADING_1) {
-            canvas.drawCircle(offset_X0, offset_X0, 1f * radius / LOADING_1 * duration, paint);
-            canvas.drawCircle(offset_X1, offset_X1, 1f * radius / LOADING_1 * duration, paint);
+            pointPaint_S.setAlpha((int) (255f / LOADING_1 * duration));
+            pointPaint_M.setAlpha((int) (255f / LOADING_1 * duration));
+            canvas.drawCircle(offset_X0, offset_X0, 1f * radius / LOADING_1 * duration, pointPaint_S);
+            canvas.drawCircle(offset_X1, offset_X1, 1f * radius / LOADING_1 * duration, pointPaint_M);
 
-            canvas.drawCircle(offset_X3, offset_X3, 1f * radius / LOADING_1 * duration, paint);
-            canvas.drawCircle(offset_X4, offset_X4, 1f * radius / LOADING_1 * duration, paint);
+            canvas.drawCircle(offset_X3, offset_X3, 1f * radius / LOADING_1 * duration, pointPaint_M);
+            canvas.drawCircle(offset_X4, offset_X4, 1f * radius / LOADING_1 * duration, pointPaint_S);
         } else if (duration >= LOADING_1) {
-            canvas.drawCircle(offset_X0, offset_X0, radius, paint);
-            canvas.drawCircle(offset_X1, offset_X1, radius, paint);
+            pointPaint_S.setAlpha(255);
+            pointPaint_M.setAlpha(255);
+            canvas.drawCircle(offset_X0, offset_X0, radius, pointPaint_S);
+            canvas.drawCircle(offset_X1, offset_X1, radius, pointPaint_M);
 
-            canvas.drawCircle(offset_X3, offset_X3, radius, paint);
-            canvas.drawCircle(offset_X4, offset_X4, radius, paint);
+            canvas.drawCircle(offset_X3, offset_X3, radius, pointPaint_M);
+            canvas.drawCircle(offset_X4, offset_X4, radius, pointPaint_S);
         }
         if (duration >= LOADING_1 && duration <= LOADING_2) {
-            canvas.drawCircle((padding + width / 4) + (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), (padding + width / 4) - (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), paint);
-            canvas.drawCircle((padding + width / 2) + (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), (padding + width / 2) - (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), paint);
-            canvas.drawCircle((padding + width / 2) - (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), (padding + width / 2) + (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), paint);
-            canvas.drawCircle((padding + width / 4f * 3) - (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), (padding + width / 4f * 3) + (width / 4f) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), paint);
+            pointPaint_M.setAlpha((int) (255f / (LOADING_2 - LOADING_1) * (duration - LOADING_1)));
+            pointPaint_L.setAlpha((int) (255f / (LOADING_2 - LOADING_1) * (duration - LOADING_1)));
+            canvas.drawCircle(offset_X1 + (offset_X1 - padding) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), offset_X1 - (offset_X1 - padding) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), pointPaint_M);
+            canvas.drawCircle(offset_X2 + (offset_X1 - padding) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), offset_X2 - (offset_X1 - padding) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), pointPaint_L);
+            canvas.drawCircle(offset_X2 - (offset_X1 - padding) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), offset_X2 + (offset_X1 - padding) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), pointPaint_L);
+            canvas.drawCircle(offset_X3 - (offset_X1 - padding) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), offset_X3 + (offset_X1 - padding) / (LOADING_2 - LOADING_1) * (duration - LOADING_1), 1f * radius / (LOADING_2 - LOADING_1) * (duration - LOADING_1), pointPaint_M);
 
         } else if (duration >= LOADING_2) {
-            canvas.drawCircle(padding + width / 2, padding, radius, paint);
-            canvas.drawCircle(padding + width / 4 * 3, padding + width / 4, radius, paint);
-            canvas.drawCircle(padding + width / 4, padding + width / 4 * 3, radius, paint);
-            canvas.drawCircle(padding + width / 4, padding + width / 4, radius, paint);
-            canvas.drawCircle(padding + width / 2, padding + width, radius, paint);
+            pointPaint_M.setAlpha(255);
+            pointPaint_L.setAlpha(255);
+            canvas.drawCircle(offset_X2, offset_X0, radius, pointPaint_M);
+            canvas.drawCircle(offset_X3, offset_X1, radius, pointPaint_L);
+            canvas.drawCircle(offset_X1, offset_X3, radius, pointPaint_L);
+            canvas.drawCircle(offset_X1, offset_X1, radius, pointPaint_M);
+            canvas.drawCircle(offset_X2, offset_X4, radius, pointPaint_M);
         }
         if (duration >= LOADING_2) {
-            canvas.drawCircle(padding + width / 4f * 3 + width / 4f / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), (padding + width / 4f) - width / 4f / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), 1f * radius / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), paint);
-            canvas.drawCircle(padding + width / 4f - width / 4f / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), (width / 4f * 3 + padding) + (width / 4f) / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), 1f * radius / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), paint);
+            pointPaint_L.setAlpha((int) (255f / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2)));
+            canvas.drawCircle(padding + width / 4f * 3 + width / 4f / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), (padding + width / 4f) - width / 4f / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), 1f * radius / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), pointPaint_L);
+            canvas.drawCircle(padding + width / 4f - width / 4f / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), (width / 4f * 3 + padding) + (width / 4f) / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), 1f * radius / (TOTAL_TIME - LOADING_2) * (duration - LOADING_2), pointPaint_L);
         }
     }
 
@@ -326,29 +348,47 @@ public class LoGo extends View implements RefreshView {
 
     private void drawEnding(Canvas canvas) {
         if (duration <= LOADING_1) {//第一阶段
-            canvas.drawCircle(offset_X0 + (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, paint);
-            canvas.drawCircle(offset_X2 - (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, paint);
-            canvas.drawCircle(offset_X4 - (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, paint);
+            pointPaint_S.setAlpha((int) (255f * duration / LOADING_1));
+            pointPaint_M.setAlpha((int) (255f * duration / LOADING_1));
+            pointPaint_L.setAlpha((int) (255f * duration / LOADING_1));
+            canvas.drawCircle(offset_X0 + (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, pointPaint_S);
+            canvas.drawCircle(offset_X2 - (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, pointPaint_M);
+            canvas.drawCircle(offset_X4 - (offset_X1 - padding) * duration / LOADING_1, offset_X0 + (offset_X1 - padding) * duration / LOADING_1, radius, pointPaint_L);
 
-            canvas.drawCircle(offset_X0 + (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, paint);
-            canvas.drawCircle(offset_X2 + (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, paint);
-            canvas.drawCircle(offset_X4 - (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, paint);
+            canvas.drawCircle(offset_X0 + (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, pointPaint_L);
+            canvas.drawCircle(offset_X2 + (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, pointPaint_M);
+            canvas.drawCircle(offset_X4 - (offset_X1 - padding) * duration / LOADING_1, offset_X4 - (offset_X1 - padding) * duration / LOADING_1, radius, pointPaint_S);
 
-            canvas.drawCircle(offset_X2, offset_X2, radius, paint);
-            canvas.drawCircle(offset_X1, offset_X1, radius, paint);
-            canvas.drawCircle(offset_X1, offset_X3, radius, paint);
-            canvas.drawCircle(offset_X3, offset_X1, radius, paint);
-            canvas.drawCircle(offset_X3, offset_X3, radius, paint);
+
+            pointPaint_S.setAlpha(255);
+            pointPaint_M.setAlpha(255);
+            pointPaint_L.setAlpha(255);
+            canvas.drawCircle(offset_X2, offset_X2, radius, pointPaint_L);
+            canvas.drawCircle(offset_X1, offset_X1, radius, pointPaint_M);
+            canvas.drawCircle(offset_X1, offset_X3, radius, pointPaint_M);
+            canvas.drawCircle(offset_X3, offset_X1, radius, pointPaint_L);
+            canvas.drawCircle(offset_X3, offset_X3, radius, pointPaint_M);
         } else if (duration >= LOADING_1 && duration <= LOADING_2) {
 
-            canvas.drawCircle(offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, paint);
-            canvas.drawCircle(offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, paint);
-            canvas.drawCircle(offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, paint);
-            canvas.drawCircle(offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, paint);
+            pointPaint_S.setAlpha((int) (255f * (duration - LOADING_1) / (LOADING_2 - LOADING_1)));
+            pointPaint_M.setAlpha((int) (255f * (duration - LOADING_1) / (LOADING_2 - LOADING_1)));
+            pointPaint_L.setAlpha((int) (255f * (duration - LOADING_1) / (LOADING_2 - LOADING_1)));
 
-            canvas.drawCircle(offset_X2, offset_X2, radius, paint);
+            canvas.drawCircle(offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, pointPaint_M);
+            canvas.drawCircle(offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, pointPaint_M);
+            canvas.drawCircle(offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X1 + (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, pointPaint_L);
+            canvas.drawCircle(offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), offset_X3 - (offset_X1 - padding) * (duration - LOADING_1) / (LOADING_2 - LOADING_1), radius, pointPaint_M);
+
+            canvas.drawCircle(offset_X2, offset_X2, radius, pointPaint_L);
+
+            pointPaint_S.setAlpha(255);
+            pointPaint_M.setAlpha(255);
+            pointPaint_L.setAlpha(255);
+
         } else if (duration > LOADING_2) {
-            canvas.drawCircle(offset_X2, offset_X2, radius * (TOTAL_TIME - duration) / (TOTAL_TIME - LOADING_2), paint);
+            pointPaint_L.setAlpha((int) (255f * (TOTAL_TIME - duration) / (TOTAL_TIME - LOADING_2)));
+            canvas.drawCircle(offset_X2, offset_X2, radius * (TOTAL_TIME - duration) / (TOTAL_TIME - LOADING_2), pointPaint_L);
+            pointPaint_L.setAlpha(255);
         }
     }
 
@@ -387,7 +427,7 @@ public class LoGo extends View implements RefreshView {
      * @param canvas
      */
     private void drawFirstPoint(Canvas canvas) {
-        canvas.drawCircle(padding + width / 2, padding + width / 2, (float) (1f * width * Math.max(1 - percent, 0.2) / 2), paint);
+        canvas.drawCircle(offset_X2, offset_X2, (float) (1f * width * Math.max(1 - percent, 0.2) / 2), pointPaint_L);
     }
 
     /**
